@@ -1,7 +1,15 @@
 .App {
   text-align: center;
 }
+body{
+  background-image: url("./bg.jpg");
+  background-size: cover; /* or 'contain' depending on your needs */
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  height: 100vh; /* Set full height of the viewport */
+  overflow: hidden; /* Hide overflow to prevent scrolling */
 
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;

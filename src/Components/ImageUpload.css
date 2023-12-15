@@ -1,0 +1,22 @@
+/* Add this CSS in your component's stylesheet or in a separate CSS file */
+.dropzone {
+    border: 2px dashed #f9b3b3;
+    border-radius: 4px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    color: rgb(17, 87, 251);
+    background-color: white;
+  
+  }
+  
+  .dropzone p {
+    margin: 0;
+   
+  }
+
+  .dropzone:hover {
+    background-color: #f0faff;
+    filter: blur(2px);
+  }
+  
