@@ -3,34 +3,47 @@ import { CloudinaryContext, Image } from 'cloudinary-react';
 import Webcam from 'react-webcam';
 import QRCode from 'qrcode.react';
 import copy from 'copy-to-clipboard';
+import AWS from 'aws-sdk';
 import { useDropzone } from 'react-dropzone';
-import "./ImageUpload.css";
+import './ImageUpload.css';
+import { toast } from 'react-toastify';
+
 const cloudinaryConfig = {
   cloudName: 'dwu6zg8lc',
   apiKey: '417519479118346',
   apiSecret: 'pP2gWfIa68JTgMJaI7I27xGYe1w',
 };
 
+AWS.config.update({
+  accessKeyId: "AKIAWMGTU2UITPYYRPZN",
+  secretAccessKey: "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",
+  region: "us-east-2",
+});
+
+const rekognition = new AWS.Rekognition();
+
 const CloudinaryUpload = async (file) => {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'recognition');
+    if (file.type === 'image/jpeg' || file.type === 'image/png') {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'recognition');
 
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`,
-      {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`, {
         method: 'POST',
         body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image to Cloudinary');
       }
-    );
 
-    if (!response.ok) {
-      throw new Error('Failed to upload image to Cloudinary');
+      toast.success('Image uploaded successfully');
+      const data = await response.json();
+      return data.secure_url;
+    } else {
+      toast.error('Wrong file type');
     }
-
-    const data = await response.json();
-    return data.secure_url;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;
@@ -40,6 +53,7 @@ const CloudinaryUpload = async (file) => {
 export default function ImageUpload() {
   const [uploadedImage, setUploadedImage] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  const [text, setText] = useState();
   const webcamRef = useRef(null);
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: async (acceptedFiles) => {
@@ -52,14 +66,13 @@ export default function ImageUpload() {
     },
   });
 
-  // Reusable function for capturing screenshot and uploading to Cloudinary
   const handleCaptureAndUpload = async () => {
     try {
       const imageSrc = webcamRef.current.getScreenshot();
       const blob = await fetch(imageSrc).then((res) => res.blob());
       const uploadedUrl = await CloudinaryUpload(blob);
       setUploadedImage(uploadedUrl);
-      console.log(qrCodeDataUrl)
+      console.log(qrCodeDataUrl);
     } catch (error) {
       console.error('Error capturing and uploading image:', error);
     }
@@ -68,6 +81,7 @@ export default function ImageUpload() {
   const stopCamera = () => {
     const videoTrack = webcamRef.current.video.srcObject.getVideoTracks()[0];
     videoTrack.stop();
+    toast.success('Camera stopped successfully');
   };
 
   const startCamera = async () => {
@@ -105,6 +119,51 @@ export default function ImageUpload() {
     copy(uploadedImage);
   };
 
+  const getImageBytes = async (imageUrl) => {
+    const response = await fetch(imageUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    return new Uint8Array(arrayBuffer);
+  };
+
+  async function facialAnalysis() {
+    try {
+      const rekognitionParams = {
+        Image: {
+          Bytes: await getImageBytes(uploadedImage),
+        },
+        Attributes: ['ALL'],
+      };
+
+      console.log('Sending To Rekog');
+      const data = await rekognition.detectFaces(rekognitionParams).promise();
+
+      // Extract desired attributes from the detected faces
+      const faceDetails = data.FaceDetails.map((faceDetail) => ({
+        emotions: faceDetail.Emotions.map((emotion) => ({
+          type: emotion.Type,
+          confidence: emotion.Confidence,
+        })),
+        glasses: faceDetail.Eyeglasses.Value,
+        sunglasses: faceDetail.Sunglasses.Value,
+        gender: faceDetail.Gender.Value,
+        smile: faceDetail.Smile.Value,
+        ageRange: {
+          low: faceDetail.AgeRange.Low,
+          high: faceDetail.AgeRange.High,
+        },
+      }));
+
+      console.log('Face details:', faceDetails);
+      // Handle the face details data as needed
+      setText(faceDetails);
+      const arr = faceDetails[0];
+      console.log("facedetails",arr);
+      console.log(text , '1234567');
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <CloudinaryContext {...cloudinaryConfig}>
       <div className="container mt-4 imageupload">
@@ -121,6 +180,9 @@ export default function ImageUpload() {
               </button>
               <button className="btn btn-danger" onClick={stopCamera}>
                 Stop Camera
+              </button>
+              <button className="btn btn-primary" onClick={facialAnalysis}>
+                Get Facial Analysis
               </button>
             </div>
           </div>
@@ -151,13 +213,13 @@ export default function ImageUpload() {
             </div>
           )}
         </div>
-        <div className="row dropclass" >
+        <div className="row dropclass">
           <div className="col-md-6 mt-3">
             {/* Dropzone */}
             <div {...getRootProps()} className="dropzone">
               <input {...getInputProps()} />
-              <i class="fa-regular fa-download"></i>
-              <p>Drag 'n' drop an image here, or click to select one  </p>
+              <i className="fa-regular fa-download"></i>
+              <p>Drag 'n' drop an image here, or click to select one</p>
             </div>
           </div>
         </div>
