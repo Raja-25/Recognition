@@ -8,17 +8,7 @@ import { useDropzone } from 'react-dropzone';
 import './ImageUpload.css';
 import { toast } from 'react-toastify';
 
-const cloudinaryConfig = {
-  cloudName: 'dwu6zg8lc',
-  apiKey: '417519479118346',
-  apiSecret: 'pP2gWfIa68JTgMJaI7I27xGYe1w',
-};
 
-AWS.config.update({
-  accessKeyId: "AKIAWMGTU2UITPYYRPZN",
-  secretAccessKey: "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",
-  region: "us-east-2",
-});
 
 const rekognition = new AWS.Rekognition();
 
