@@ -8,15 +8,15 @@ import { useDropzone } from 'react-dropzone';
 import './ImageUpload.css';
 import { toast } from 'react-toastify';
 const cloudinaryConfig = {
-  cloudName: process.env.Rec_cloudName,
-  apiKey: process.env.Rec_apiKey,
-  apiSecret: process.env.Rec_apiSecret,
+  cloudName: process.env.REACT_APP_Cloud_Name,
+  apiKey: process.env.REACT_APP_Api_Key,
+  apiSecret: process.env.REACT_APP_Api_Secret,
 };
 
 AWS.config.update({
-  accessKeyId: process.env.Rec_accessKeyId,
-  secretAccessKey:  process.env.Rec_secretAccessKey,
-  region:  process.env.Rec_region,
+  accessKeyId: process.env.REACT_APP_Access_Key_Id,
+  secretAccessKey:  process.env.REACT_APP_Secret_Access_Key,
+  region:  process.env.REACT_APP_region,
 });
 
 
@@ -24,6 +24,7 @@ const rekognition = new AWS.Rekognition();
 
 const CloudinaryUpload = async (file) => {
   try {
+
     if (file.type === 'image/jpeg' || file.type === 'image/png') {
       const formData = new FormData();
       formData.append('file', file);
@@ -58,6 +59,8 @@ export default function ImageUpload() {
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: async (acceptedFiles) => {
       try {
+        console.log('Environment Variables:', process.env);
+
         const uploadedUrl = await CloudinaryUpload(acceptedFiles[0]);
         setUploadedImage(uploadedUrl);
       } catch (error) {
