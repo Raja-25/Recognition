@@ -161,7 +161,7 @@ export default function ImageUpload() {
       setText(faceDetails);
       const arr = faceDetails[0];
       console.log("facedetails",arr);
-      console.log(text , '1234567');
+      console.log(text);
     } catch (error) {
       console.error(error);
     }
