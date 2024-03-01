@@ -7,6 +7,7 @@ import AWS from 'aws-sdk';
 import { useDropzone } from 'react-dropzone';
 import './ImageUpload.css';
 import { toast } from 'react-toastify';
+import Loader from "./Loader"
 const cloudinaryConfig = {
   cloudName: process.env.REACT_APP_Cloud_Name,
   apiKey: process.env.REACT_APP_Api_Key,
@@ -15,8 +16,8 @@ const cloudinaryConfig = {
 
 AWS.config.update({
   accessKeyId: process.env.REACT_APP_Access_Key_Id,
-  secretAccessKey:  process.env.REACT_APP_Secret_Access_Key,
-  region:  process.env.REACT_APP_region,
+  secretAccessKey: process.env.REACT_APP_Secret_Access_Key,
+  region: process.env.REACT_APP_region,
 });
 
 
@@ -54,12 +55,12 @@ const CloudinaryUpload = async (file) => {
 export default function ImageUpload() {
   const [uploadedImage, setUploadedImage] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
-  const [text, setText] = useState();
+  const [details, setDetails] = useState();
   const webcamRef = useRef(null);
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: async (acceptedFiles) => {
       try {
-        console.log('Environment Variables:', process.env);
+
 
         const uploadedUrl = await CloudinaryUpload(acceptedFiles[0]);
         setUploadedImage(uploadedUrl);
@@ -130,6 +131,7 @@ export default function ImageUpload() {
 
   async function facialAnalysis() {
     try {
+      setDetails(null);
       const rekognitionParams = {
         Image: {
           Bytes: await getImageBytes(uploadedImage),
@@ -140,28 +142,36 @@ export default function ImageUpload() {
       console.log('Sending To Rekog');
       const data = await rekognition.detectFaces(rekognitionParams).promise();
 
+
+
       // Extract desired attributes from the detected faces
-      const faceDetails = data.FaceDetails.map((faceDetail) => ({
-        emotions: faceDetail.Emotions.map((emotion) => ({
-          type: emotion.Type,
-          confidence: emotion.Confidence,
-        })),
-        glasses: faceDetail.Eyeglasses.Value,
-        sunglasses: faceDetail.Sunglasses.Value,
-        gender: faceDetail.Gender.Value,
-        smile: faceDetail.Smile.Value,
-        ageRange: {
-          low: faceDetail.AgeRange.Low,
-          high: faceDetail.AgeRange.High,
-        },
-      }));
+      const faceDetails = data.FaceDetails.map((faceDetail) => {
+        let maxConfidenceEmotion = { type: "", confidence: 0 };
+
+        faceDetail.Emotions.forEach((emotion) => {
+          if (emotion.Confidence > maxConfidenceEmotion.confidence) {
+            maxConfidenceEmotion.type = emotion.Type;
+            maxConfidenceEmotion.confidence = emotion.Confidence;
+          }
+        });
+
+        return {
+          emotions: maxConfidenceEmotion,
+          glasses: faceDetail.Eyeglasses.Value,
+          sunglasses: faceDetail.Sunglasses.Value,
+          gender: faceDetail.Gender.Value,
+          smile: faceDetail.Smile.Value,
+          ageRange: {
+            low: faceDetail.AgeRange.Low,
+            high: faceDetail.AgeRange.High,
+          },
+        };
+      });
+
 
       console.log('Face details:', faceDetails);
-      // Handle the face details data as needed
-      setText(faceDetails);
-      const arr = faceDetails[0];
-      console.log("facedetails",arr);
-      console.log(text);
+      const att = faceDetails[0];
+      setDetails(att);
     } catch (error) {
       console.error(error);
     }
@@ -184,7 +194,7 @@ export default function ImageUpload() {
               <button className="btn btn-danger" onClick={stopCamera}>
                 Stop Camera
               </button>
-              <button className="btn btn-primary" onClick={facialAnalysis}>
+              <button className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop" onClick={facialAnalysis}>
                 Get Facial Analysis
               </button>
             </div>
@@ -207,14 +217,48 @@ export default function ImageUpload() {
               </div>
               <div className="row mt-5">
                 <div className="input-group mb-3">
-                  <input type="text" className="form-control" value={uploadedImage} readOnly />
-                  <button className="input-group-text" onClick={copyurl}>
+                  <input type="details" className="form-control" value={uploadedImage} readOnly />
+                  <button className="input-group-details" onClick={copyurl}>
                     <i className="fa-regular fa-clipboard fa-bounce"></i>
                   </button>
                 </div>
               </div>
             </div>
           )}
+          <div className="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h1 className="modal-title fs-5" id="staticBackdropLabel">Modal title</h1>
+                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div className="modal-body">
+                  {details ? (
+                    <table className="table table-hover">
+                      <tbody>
+
+                        <tr >
+                          <td>
+                            <strong>Emotion:</strong> {details.emotions.type} <br />
+                            <strong>Confidence:</strong> {details.emotions.confidence} <br />
+                            <strong>Glasses:</strong> {details.glasses} <br />
+                            <strong>Sunglasses:</strong> {details.sunglasses} <br />
+                            <strong>Gender:</strong> {details.gender} <br />
+                            <strong>Smile:</strong> {details.smile} <br />
+                            <strong>Age Range:</strong> {details.ageRange.low} - {details.ageRange.high}
+                          </td>
+                        </tr>
+
+                      </tbody>
+                    </table>
+                 ):<Loader/> }
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="row dropclass">
           <div className="col-md-6 mt-3">
