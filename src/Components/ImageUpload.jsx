@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CloudinaryContext, Image } from 'cloudinary-react';
 import Webcam from 'react-webcam';
 import QRCode from 'qrcode.react';
@@ -53,6 +53,14 @@ const CloudinaryUpload = async (file) => {
 };
 
 export default function ImageUpload() {
+  useEffect(() => {
+    console.log("Cloud Name:", process.env.REACT_APP_Cloud_Name);
+    console.log("API Key:", process.env.REACT_APP_Api_Key);
+    console.log("API Secret:", process.env.REACT_APP_Api_Secret);
+    console.log("Access Key ID:", process.env.REACT_APP_Access_Key_Id);
+    console.log("Secret Access Key:", process.env.REACT_APP_Secret_Access_Key);
+    console.log("Region:", process.env.REACT_APP_region);
+  }, []);
   const [uploadedImage, setUploadedImage] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [details, setDetails] = useState();
