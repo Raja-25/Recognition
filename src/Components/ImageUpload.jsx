@@ -55,6 +55,7 @@ const CloudinaryUpload = async (file) => {
 export default function ImageUpload() {
   useEffect(() => {
     console.log("Cloud Name:", process.env.REACT_APP_Cloud_Name);
+    
     console.log("API Key:", process.env.REACT_APP_Api_Key);
     console.log("API Secret:", process.env.REACT_APP_Api_Secret);
     console.log("Access Key ID:", process.env.REACT_APP_Access_Key_Id);
