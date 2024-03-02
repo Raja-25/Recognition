@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { CloudinaryContext, Image } from 'cloudinary-react';
 import Webcam from 'react-webcam';
 import QRCode from 'qrcode.react';
@@ -53,15 +53,7 @@ const CloudinaryUpload = async (file) => {
 };
 
 export default function ImageUpload() {
-  useEffect(() => {
-    console.log("Cloud Name:", process.env.REACT_APP_Cloud_Name);
-    
-    console.log("API Key:", process.env.REACT_APP_Api_Key);
-    console.log("API Secret:", process.env.REACT_APP_Api_Secret);
-    console.log("Access Key ID:", process.env.REACT_APP_Access_Key_Id);
-    console.log("Secret Access Key:", process.env.REACT_APP_Secret_Access_Key);
-    console.log("Region:", process.env.REACT_APP_region);
-  }, []);
+
   const [uploadedImage, setUploadedImage] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [details, setDetails] = useState();
@@ -75,6 +67,7 @@ export default function ImageUpload() {
         setUploadedImage(uploadedUrl);
       } catch (error) {
         console.error('Error uploading dropped image:', error);
+        toast.error("Error capturing and uploading image")
       }
     },
   });
@@ -88,6 +81,7 @@ export default function ImageUpload() {
       console.log(qrCodeDataUrl);
     } catch (error) {
       console.error('Error capturing and uploading image:', error);
+      toast.error("Error capturing and uploading image")
     }
   };
 
@@ -103,6 +97,7 @@ export default function ImageUpload() {
       webcamRef.current.video.srcObject = stream;
     } catch (error) {
       console.error('Error starting the camera:', error);
+      toast.error("Error starting the camera")
     }
   };
 
@@ -125,6 +120,7 @@ export default function ImageUpload() {
       document.body.removeChild(downloadLink);
     } catch (error) {
       console.error('Error downloading QR code:', error);
+      toast.error("Error downloading QR code")
     }
   };
 
@@ -192,7 +188,7 @@ export default function ImageUpload() {
         <div className="row">
           <div className="col-md-6">
             {/* Webcam */}
-            <Webcam ref={webcamRef} screenshotFormat="image/png" mirrored={true} width={450} className="img-fluid" />
+            <Webcam ref={webcamRef} screenshotFormat="image/png" mirrored={true} width={450} className="webcam" />
             <div className="mt-3">
               <button className="btn btn-primary" onClick={captureScreenshot}>
                 Capture Screenshot
@@ -203,42 +199,55 @@ export default function ImageUpload() {
               <button className="btn btn-danger" onClick={stopCamera}>
                 Stop Camera
               </button>
+              &nbsp;
               <button className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop" onClick={facialAnalysis}>
                 Get Facial Analysis
               </button>
             </div>
           </div>
-
-          {uploadedImage && (
+          <div className="row dropclass">
             <div className="col-md-6 mt-3">
-              <div className="row">
-                <div className="col-6">
-                  <p className="fs-5">Uploaded Image:</p>
-                  <Image publicId={uploadedImage} className="img-fluid" />
-                </div>
-                <div className="col-6">
-                  <p className="fs-5">Image QRcode:</p>
-                  <QRCode value={uploadedImage} id="qrCodeCanvas" className="img-fluid" />
-                  <button className="btn btn-primary mt-3 me-4" onClick={downloadQrCode}>
-                    Download QR Code
-                  </button>
-                </div>
-              </div>
-              <div className="row mt-5">
-                <div className="input-group mb-3">
-                  <input type="details" className="form-control" value={uploadedImage} readOnly />
-                  <button className="input-group-details" onClick={copyurl}>
-                    <i className="fa-regular fa-clipboard fa-bounce"></i>
-                  </button>
-                </div>
+              {/* Dropzone */}
+              <div {...getRootProps()} className="dropzone">
+                <input {...getInputProps()} />
+                <i className="fa-regular fa-download"></i>
+                <p>Drag 'n' drop an image here, or click to select one </p>
+                <p>Upload Either jpeg or png</p>
               </div>
             </div>
-          )}
+          </div>
+          <div className='row'>
+            {uploadedImage && (
+              <div className="col-md-6 mt-3">
+                <div className="row">
+                  <div className="col-6">
+                    <p className="fs-5">Uploaded Image:</p>
+                    <Image publicId={uploadedImage} className="img-fluid" />
+                  </div>
+                  <div className="col-6">
+                    <p className="fs-5">Image QRcode:</p>
+                    <QRCode value={uploadedImage} id="qrCodeCanvas" className="img-fluid" />
+                    <button className="btn btn-primary mt-3 me-4" onClick={downloadQrCode}>
+                      Download QR Code
+                    </button>
+                  </div>
+                </div>
+                <div className="row mt-5">
+                  <div className="input-group mb-3">
+                    <input type="details" className="form-control" value={uploadedImage} readOnly />
+                    <button className="input-group-details" onClick={copyurl}>
+                      <i className="fa-regular fa-clipboard fa-bounce"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h1 className="modal-title fs-5" id="staticBackdropLabel">Modal title</h1>
+                  <h1 className="modal-title fs-5" id="staticBackdropLabel">Recognition of Emotion</h1>
                   <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div className="modal-body">
@@ -250,17 +259,17 @@ export default function ImageUpload() {
                           <td>
                             <strong>Emotion:</strong> {details.emotions.type} <br />
                             <strong>Confidence:</strong> {details.emotions.confidence} <br />
-                            <strong>Glasses:</strong> {details.glasses} <br />
-                            <strong>Sunglasses:</strong> {details.sunglasses} <br />
+                            <strong>Glasses:</strong> {details.glasses === true ? "Glasses are Present" : "No glasses"} <br />
+                            <strong>Sunglasses:</strong> {details.sunglasses === true ? "SunGlasses are Present" : "No Sunglasses"} <br />
                             <strong>Gender:</strong> {details.gender} <br />
-                            <strong>Smile:</strong> {details.smile} <br />
+                            <strong>Smile:</strong> {details.smile === true ? "Smiling" : "Not Smiling"} <br />
                             <strong>Age Range:</strong> {details.ageRange.low} - {details.ageRange.high}
                           </td>
                         </tr>
 
                       </tbody>
                     </table>
-                 ):<Loader/> }
+                  ) : <Loader />}
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -269,16 +278,7 @@ export default function ImageUpload() {
             </div>
           </div>
         </div>
-        <div className="row dropclass">
-          <div className="col-md-6 mt-3">
-            {/* Dropzone */}
-            <div {...getRootProps()} className="dropzone">
-              <input {...getInputProps()} />
-              <i className="fa-regular fa-download"></i>
-              <p>Drag 'n' drop an image here, or click to select one</p>
-            </div>
-          </div>
-        </div>
+
       </div>
     </CloudinaryContext>
   );
