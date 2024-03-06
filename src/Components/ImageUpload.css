@@ -1,42 +1,69 @@
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.webcam-container,
+.image-container,
+.dropzone-container {
+  padding: 20px;
+}
+
+.webcam-container,
+.image-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.dropzone-container {
+  padding: 10px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
 .dropzone {
-  border: 2px dashed #f9b3b3;
-  border-radius: 4px;
-  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   cursor: pointer;
   color: rgb(17, 87, 251);
   background-color: white;
+  border: 2px dashed #f9b3b3;
 }
 
-.dropzone p {
-  margin: 0;
+.modal-content {
+  width: 90%;
+  margin: auto;
 }
 
-.dropzone:hover {
-  background-color: #f0faff;
-  filter: blur(2px);
+.qr-code {
+  max-width: 200px;
 }
 
-@media (max-width: 992px) {
-  .webcam, .dropzone {
-    margin-top: 20px;
-    text-align: center;
-  }
+.input-group {
+  max-width: 250px;
 }
 
-@media (max-width: 768px) {
-  .webcam{
-    margin-top: 10px;
-  }
-  .dropzone {
-    margin-bottom: 100px;
-  }
-  
-  .input-group-details {
-    bottom: 5%;
-  }
-  
-  .webcam {
-    width: 100%;
+.input-group-details {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.webcam {
+  width: 100%; /* Make the webcam fill its container */
+  height: auto; /* Ensure the aspect ratio is maintained */
+  max-width: 100%; /* Limit the maximum width */
+  max-height: 100%; /* Limit the maximum height */
+}
+
+/* Media query for mobile view */
+@media (max-width: 767px) {
+  .container {
+    grid-template-columns: 1fr;
   }
 }
